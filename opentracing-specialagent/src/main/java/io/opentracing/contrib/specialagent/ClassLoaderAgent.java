@@ -97,7 +97,7 @@ public class ClassLoaderAgent {
     @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = ClassNotFoundException.class)
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String arg, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Class<?> returned, @Advice.Thrown(readOnly = false, typing = Typing.DYNAMIC) ClassNotFoundException thrown) {
-      if (returned != null || !mutex.get().add(arg))
+      if (returned != null || mutex.get().put(arg, Boolean.TRUE) != null)
         return;
 
       try {
@@ -126,7 +126,7 @@ public class ClassLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String arg, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) URL returned) {
-      if (returned != null || !mutex.get().add(arg))
+      if (returned != null || mutex.get().put(arg, Boolean.TRUE) != null)
         return;
 
       try {
@@ -148,7 +148,7 @@ public class ClassLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String arg, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Enumeration<URL> returned) {
-      if (!mutex.get().add(arg))
+      if (mutex.get().put(arg, Boolean.TRUE) != null)
         return;
 
       try {

@@ -24,9 +24,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -119,10 +119,10 @@ public class BootLoaderAgent {
     loaded = true;
   }
 
-  public static class Mutex extends ThreadLocal<Set<String>> {
+  public static class Mutex extends ThreadLocal<Map<String,Boolean>> {
     @Override
-    protected Set<String> initialValue() {
-      return new HashSet<>();
+    protected Map<String,Boolean> initialValue() {
+      return new WeakHashMap<>();
     }
   }
 
@@ -131,7 +131,7 @@ public class BootLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.Argument(0) String arg, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) URL returned) {
-      if (returned != null || !mutex.get().add(arg))
+      if (returned != null || mutex.get().put(arg, Boolean.TRUE) != null)
         return;
 
       try {
@@ -168,7 +168,7 @@ public class BootLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.Argument(0) String arg, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Enumeration<URL> returned) {
-      if (!mutex.get().add(arg))
+      if (mutex.get().put(arg, Boolean.TRUE) != null)
         return;
 
       try {
